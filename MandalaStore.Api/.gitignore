@@ -1,0 +1,31 @@
+# Visual Studio
+.vs/
+**/.vs/
+*.user
+*.suo
+*.*proj.user
+
+# Build .NET
+**/bin/
+**/obj/
+
+# VS Code
+.vscode/
+
+# Uploads da aplicação
+uploads/
+**/uploads/
+wwwroot/uploads/
+**/wwwroot/uploads/
+
+# Configurações com segredos
+.env
+.env.*
+!.env.example
+
+appsettings.Development.json
+appsettings.Production.json
+
+# Sistema
+.DS_Store
+Thumbs.db
