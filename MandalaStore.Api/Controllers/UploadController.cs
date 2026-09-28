@@ -7,6 +7,13 @@ namespace MandalaStore.Api.Controllers
     [ApiController]
     public class UploadController : ControllerBase
     {
+        private readonly IWebHostEnvironment env;
+
+        public UploadController(IWebHostEnvironment _env)
+        {
+            env = _env;
+        }
+
         [HttpPost]
         public async Task<IActionResult> Upload(IFormFile file)
         {
@@ -14,7 +21,7 @@ namespace MandalaStore.Api.Controllers
                 return BadRequest();
 
             var folder = Path.Combine(
-                Directory.GetCurrentDirectory(),
+                env.ContentRootPath,
                 "wwwroot",
                 "uploads");
 

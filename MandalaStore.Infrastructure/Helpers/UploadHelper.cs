@@ -12,24 +12,26 @@ namespace MandalaStore.Infrastructure.Helpers
     public static class UploadHelper
     {
         public static async Task<string> UploadImagemAsync(
-            IFormFile file,
-            IWebHostEnvironment env)
+    IFormFile file,
+    IWebHostEnvironment env)
         {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("Arquivo de imagem não recebido.");
+
             var folder =
-                Path.Combine(
-                    env.WebRootPath ?? "wwwroot",
-                    "uploads");
+        Path.Combine(
+            env.ContentRootPath,
+            "wwwroot",
+            "uploads");
 
             Directory.CreateDirectory(folder);
 
-            // nome original
             var originalName =
-                $"{Guid.NewGuid()}_{file.FileName}";
+                $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
 
             var originalPath =
                 Path.Combine(folder, originalName);
 
-            // salva original
             using (var stream =
                 new FileStream(
                     originalPath,
@@ -38,7 +40,6 @@ namespace MandalaStore.Infrastructure.Helpers
                 await file.CopyToAsync(stream);
             }
 
-            // processa imagem
             var finalUrl =
                 ProcessarMandala(
                     originalPath,
