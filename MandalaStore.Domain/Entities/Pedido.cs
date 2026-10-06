@@ -55,5 +55,10 @@ namespace MandalaStore.Domain.Entities
 
         // Mercado Pago
         public long? PaymentId { get; set; }
+
+        //Acompanhamento 
+        public string? TokenAcompanhamento { get; set; }
+
+        public DateTime? TokenAcompanhamentoExpiraEm { get; set; }
     }
 }

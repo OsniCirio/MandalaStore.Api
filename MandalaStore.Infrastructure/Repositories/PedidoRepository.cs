@@ -39,6 +39,12 @@ namespace MandalaStore.Infrastructure.Repositories
                 x => x.Id == pedidoId,
                 update);
         }
+        public async Task<Pedido?> GetByTokenAcompanhamentoAsync(string token)
+        {
+            return await _collection
+                .Find(x => x.TokenAcompanhamento == token)
+                .FirstOrDefaultAsync();
+        }
         public async Task UpdateFreteCompradoAsync(string pedidoId)
 {
     var update = Builders<Pedido>.Update
@@ -67,6 +73,8 @@ namespace MandalaStore.Infrastructure.Repositories
         }
         public async Task CreateAsync(Pedido pedido)
         {
+            pedido.TokenAcompanhamento = Guid.NewGuid().ToString("N");
+            pedido.TokenAcompanhamentoExpiraEm = DateTime.UtcNow.AddDays(30);
             pedido.DataPedido = DateTime.UtcNow;
             pedido.Status = string.IsNullOrWhiteSpace(pedido.Status)
                 ? "Pendente"

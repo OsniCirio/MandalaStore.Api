@@ -2,7 +2,9 @@
 using MandalaStore.Infrastructure.Interfaces;
 using MandalaStore.Infrastructure.Repositories;
 using MandalaStore.Infrastructure.Services;
+using MandalaStore.Infrastructure.Settings;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using OpenCvSharp;
 using SharpCompress.Common;
@@ -19,15 +21,22 @@ public class PedidoService
     private readonly PedidoRepository _pedidoRepository;
     private readonly ProdutoRepository _produtoRepository;
     private readonly IMelhorEnvioService _melhorEnvioService;
+    private readonly IEmailService _emailService;
+    private readonly AppSettings _appSettings;
 
     public PedidoService(
         PedidoRepository pedidoRepository,
         ProdutoRepository produtoRepository,
-        IMelhorEnvioService melhorEnvioService)
+        IMelhorEnvioService melhorEnvioService,
+        IEmailService emailService,
+        IOptions<AppSettings> appSettings)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
         _melhorEnvioService = melhorEnvioService;
+        _emailService = emailService;
+        _appSettings = appSettings.Value;
+
     }
     public async Task ProcessarEtiquetaAsync(string pedidoId)
     {
@@ -58,6 +67,50 @@ public class PedidoService
         await _pedidoRepository.UpdateStatusAsync(
             pedidoId,
             "EtiquetaGerada");
+    }
+    public async Task EnviarEmailAcompanhamentoAsync(string pedidoId)
+    {
+        var pedido = await _pedidoRepository.GetByIdAsync(pedidoId)
+            ?? throw new Exception("Pedido não encontrado.");
+
+        if (string.IsNullOrWhiteSpace(pedido.TokenAcompanhamento))
+            throw new Exception(
+                "Pedido não possui token de acompanhamento.");
+
+        if (string.IsNullOrWhiteSpace(pedido.Email))
+            throw new Exception(
+                "Pedido não possui e-mail.");
+        var link =$"{_appSettings.FrontendUrl}/acompanhar-pedido/{pedido.TokenAcompanhamento}"; 
+        var html = $"""
+        <html>
+        <body>
+            <h2>Olá, {pedido.NomeCliente}!</h2>
+
+            <p>
+                Obrigado pela sua compra na Mandalas Good Vibration.
+            </p>
+
+            <p>
+                Você pode acompanhar seu pedido pelo link abaixo:
+            </p>
+
+            <p>
+                <a href="{link}">
+                    Acompanhar meu pedido
+                </a>
+            </p>
+
+            <p>
+                Este link é pessoal e temporário.
+            </p>
+        </body>
+        </html>
+        """;
+
+        await _emailService.EnviarAsync(
+            pedido.Email,
+            "Acompanhe seu pedido - Mandalas Good Vibration",
+            html);
     }
     public async Task<string> CriarEnvioAsync(string pedidoId)
     {
@@ -216,7 +269,7 @@ public class PedidoService
             pedido.MelhorEnvioId);
 
     }
-    public async Task GerarEtiquetaCompletaAsync(string pedidoId)
+    public async Task<string> GerarEtiquetaCompletaAsync(string pedidoId)
     {
         var pedido =
             await _pedidoRepository.GetByIdAsync(pedidoId)
@@ -231,7 +284,7 @@ public class PedidoService
         // 1 - CRIAR ENVIO NO MELHOR ENVIO
         // ==========================================
 
-        await CriarEnvioAsync(pedidoId);
+        var melhorEnvioId = await CriarEnvioAsync(pedidoId);
 
 
         // ==========================================
@@ -255,6 +308,7 @@ public class PedidoService
         await _pedidoRepository.UpdateStatusAsync(
             pedidoId,
             "EtiquetaGerada");
+        return melhorEnvioId;
     }
     public async Task<string> ImprimirEtiquetaAsync(string pedidoId)
     {

@@ -18,8 +18,13 @@ builder.Services.Configure<MongoSettings>(
 builder.Services.Configure<MercadoPagoSettings>(
     builder.Configuration.GetSection("MercadoPago"));
 
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("Smtp"));
 
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("App"));
 
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddScoped<ProdutoRepository>();
 

@@ -45,10 +45,10 @@ namespace MandalaStore.Api.Controllers
         {
             try
             {
-                var melhorEnvioId =
-                    await _pedidoService.CriarEnvioAsync(id);
+               
+                var melhorEnvioId = await _pedidoService.GerarEtiquetaCompletaAsync(id);
 
-                
+
                 return Ok(new
                 {
                     melhorEnvioId
@@ -58,6 +58,45 @@ namespace MandalaStore.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        [HttpPost("{id}/email-acompanhamento")]
+        public async Task<IActionResult> EnviarEmailAcompanhamento(string id)
+        {
+            try
+            {
+                await _pedidoService
+                    .EnviarEmailAcompanhamentoAsync(id);
+
+                return Ok(new
+                {
+                    message = "E-mail enviado com sucesso."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpGet("acompanhamento/{token}")]
+        public async Task<IActionResult> Acompanhar(string token)
+        {
+            var pedido =
+                await _repository.GetByTokenAcompanhamentoAsync(token);
+
+            if (pedido is null)
+                return NotFound("Pedido não encontrado.");
+
+            if (pedido.TokenAcompanhamentoExpiraEm < DateTime.UtcNow)
+                return NotFound("Link de acompanhamento expirado.");
+
+            return Ok(new
+            {
+                pedido.Id,
+                pedido.DataPedido,
+                pedido.Status,
+                pedido.Total,
+                pedido.FreteServico
+            });
         }
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Pedido pedido)

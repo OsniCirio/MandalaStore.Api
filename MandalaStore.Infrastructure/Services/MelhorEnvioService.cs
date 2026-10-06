@@ -11,6 +11,7 @@ using MandalaStore.Infrastructure.DTO.Request;
 using MandalaStore.Infrastructure.DTO;
 using MandalaStore.Application.DTO.Response;
 using System.Net.Http.Json;
+using System.Globalization;
 
 
 
@@ -86,16 +87,42 @@ public class MelhorEnvioService : IMelhorEnvioService
         if (melhorEnvioResponse == null)
             return new List<ShippingOptionDto>();
 
-        return melhorEnvioResponse.Where(x => string.IsNullOrEmpty(x.Error))
-            .Select(x => new ShippingOptionDto
-            {
-                Id = x.Id,
-                Carrier = x.Company?.Name ?? "",
-                Service = x.Name ?? "",
-                Price = decimal.TryParse(x.Price.Replace(".", ","), out var price) ? price : 0,
-                DeliveryDays = x.DeliveryTime ?? 0
-            })
-            .ToList();
+        
+       var opcoes = melhorEnvioResponse
+      .Where(x => string.IsNullOrEmpty(x.Error))
+      .Select(x =>
+      {
+          if (!decimal.TryParse(
+                  x.Price,
+                  NumberStyles.AllowDecimalPoint,
+                  CultureInfo.InvariantCulture,
+                  out var price))
+          {
+              throw new Exception(
+                  $"Preço de frete inválido: {x.Price}");
+          }
+         
+          return new ShippingOptionDto
+          {
+              Id = x.Id,
+              Carrier = x.Company?.Name ?? "",
+              Service = x.Name ?? "",
+              Price = price,
+              DeliveryDays = x.DeliveryTime ?? 0
+          };
+      })
+      .ToList();
+
+        opcoes.Insert(0, new ShippingOptionDto
+        {
+            Id = 0,
+            Carrier = "MandalaStore",
+            Service = "Frete Grátis",
+            Price = 0m,
+            DeliveryDays = 0
+        });
+
+        return opcoes;
     }
 
     public async Task<string> AdicionarAoCarrinhoAsync(
