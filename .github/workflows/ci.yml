@@ -28,7 +28,7 @@ jobs:
             9.0.x
 
       - name: Restaurar dependencias
-        run: dotnet restore MandalaStore.sln
+        run: dotnet restore MandalaStore.Api/MandalaStore.Api.csproj
 
       - name: Compilar em Release
-        run: dotnet build MandalaStore.sln --configuration Release --no-restore
+        run: dotnet build MandalaStore.Api/MandalaStore.Api.csproj --configuration Release --no-restore
