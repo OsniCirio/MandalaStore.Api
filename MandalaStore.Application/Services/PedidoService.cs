@@ -1,4 +1,5 @@
-﻿using MandalaStore.Domain.Entities;
+﻿using MandalaStore.Application.DTOs;
+using MandalaStore.Domain.Entities;
 using MandalaStore.Infrastructure.Interfaces;
 using MandalaStore.Infrastructure.Repositories;
 using MandalaStore.Infrastructure.Services;
@@ -80,7 +81,9 @@ public class PedidoService
         if (string.IsNullOrWhiteSpace(pedido.Email))
             throw new Exception(
                 "Pedido não possui e-mail.");
+        
         var link =$"{_appSettings.FrontendUrl}/acompanhar-pedido/{pedido.TokenAcompanhamento}"; 
+
         var html = $"""
         <html>
         <body>
@@ -111,6 +114,31 @@ public class PedidoService
             pedido.Email,
             "Acompanhe seu pedido - Mandalas Good Vibration",
             html);
+    }
+    public async Task<AcompanhamentoPedidoDto?>
+    ObterAcompanhamentoAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
+        var pedido = await _pedidoRepository
+            .GetByTokenAcompanhamentoAsync(token);
+
+        if (pedido is null)
+            return null;
+
+        if (!pedido.TokenAcompanhamentoExpiraEm.HasValue ||
+            pedido.TokenAcompanhamentoExpiraEm.Value <= DateTime.UtcNow)
+            return null;
+
+        return new AcompanhamentoPedidoDto
+        {
+            NomeCliente = pedido.NomeCliente,
+            DataPedido = pedido.DataPedido,
+            Total = pedido.Total,
+            Status = pedido.Status,
+            FreteServico = pedido.FreteServico
+        };
     }
     public async Task<string> CriarEnvioAsync(string pedidoId)
     {

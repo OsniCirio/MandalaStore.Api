@@ -1,4 +1,5 @@
 ﻿using MandalaStore.Application.DTO;
+using MandalaStore.Application.Services;
 using MandalaStore.Infrastructure.Repositories;
 using MandalaStore.Infrastructure.Services;
 using MercadoPago.Client.Payment;
@@ -15,13 +16,14 @@ namespace MandalaStore.Api.Controllers
     {
         protected readonly MercadoPagoService _service;
         protected readonly PedidoRepository  _pedidoRepository;
+        protected readonly PedidoService _pedidoService;
 
 
-
-        public PagamentoController(MercadoPagoService service, PedidoRepository pedidoRepository)
+        public PagamentoController(MercadoPagoService service, PedidoRepository pedidoRepository, PedidoService pedidoService)
         {
             _service = service;
             _pedidoRepository = pedidoRepository;
+            _pedidoService = pedidoService;
         }
 
         [HttpPost("pix/{id}")]
@@ -89,6 +91,8 @@ namespace MandalaStore.Api.Controllers
                     pedidoId,
                     "Pago"
                 );
+
+                await _pedidoService.EnviarEmailAcompanhamentoAsync(pedido.Id!);
             }
 
             return Ok(new

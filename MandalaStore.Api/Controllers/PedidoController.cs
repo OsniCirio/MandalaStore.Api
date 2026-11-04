@@ -2,6 +2,7 @@
 using MandalaStore.Domain.Entities;
 using MandalaStore.Infrastructure.Repositories;
 using MandalaStore.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -59,6 +60,20 @@ namespace MandalaStore.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [AllowAnonymous]
+        [HttpGet("acompanhamento/{token}")]
+        public async Task<IActionResult> AcompanharPedido(string token)
+        {
+            var acompanhamento = await _pedidoService
+                .ObterAcompanhamentoAsync(token);
+
+            if (acompanhamento is null)
+                return NotFound("Link inválido ou expirado.");
+
+            return Ok(acompanhamento);
+        }
+
+
         [HttpPost("{id}/email-acompanhamento")]
         public async Task<IActionResult> EnviarEmailAcompanhamento(string id)
         {
@@ -76,27 +91,6 @@ namespace MandalaStore.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-        }
-        [HttpGet("acompanhamento/{token}")]
-        public async Task<IActionResult> Acompanhar(string token)
-        {
-            var pedido =
-                await _repository.GetByTokenAcompanhamentoAsync(token);
-
-            if (pedido is null)
-                return NotFound("Pedido não encontrado.");
-
-            if (pedido.TokenAcompanhamentoExpiraEm < DateTime.UtcNow)
-                return NotFound("Link de acompanhamento expirado.");
-
-            return Ok(new
-            {
-                pedido.Id,
-                pedido.DataPedido,
-                pedido.Status,
-                pedido.Total,
-                pedido.FreteServico
-            });
         }
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Pedido pedido)
