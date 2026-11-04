@@ -1,5 +1,6 @@
-﻿using MailKit.Net.Smtp;
+﻿
 
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using MandalaStore.Infrastructure.Interfaces;
 using MandalaStore.Infrastructure.Settings;
@@ -22,7 +23,10 @@ public class EmailService : IEmailService
         string assunto,
         string html)
     {
-        var mensagem = new MimeMessage();
+        try
+        {
+
+            var mensagem = new MimeMessage();
 
         mensagem.From.Add(
             new MailboxAddress(
@@ -53,5 +57,13 @@ public class EmailService : IEmailService
         await smtp.SendAsync(mensagem);
 
         await smtp.DisconnectAsync(true);
+        
+        }
+        catch(Exception ex)
+        {
+            throw;
+        }
+
     }
+
 }

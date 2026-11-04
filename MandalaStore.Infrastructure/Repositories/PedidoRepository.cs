@@ -104,6 +104,7 @@ namespace MandalaStore.Infrastructure.Repositories
                 x => x.Id == id,
                 update);
         }
+
      
     }
 }
